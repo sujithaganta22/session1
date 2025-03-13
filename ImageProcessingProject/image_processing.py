@@ -39,14 +39,23 @@ plt.title("Scaled Image (1.5x)")
 plt.axis("off")
 plt.show()
 
+h, w = image.shape[:2]
+
 # Define focal length variations
 focal_lengths = [50, 100, 200]
 
 # Display different focal lengths
 plt.figure(figsize=(12, 4))
 for i, f in enumerate(focal_lengths):
-    f_matrix = np.array([[f, 0, w//2], [0, f, h//2], [0, 0, 1]])  # Camera intrinsic matrix
-    warped_image = cv2.warpPerspective(image, f_matrix, (w, h))
+    # Create a correct homography matrix
+    f_matrix = np.array([[f, 0, w//2], [0, f, h//2], [0, 0, 1]], dtype=np.float32)
+
+    # Use `cv2.getPerspectiveTransform()` instead to define a proper perspective transform
+    src_pts = np.float32([[0, 0], [w-1, 0], [0, h-1], [w-1, h-1]])
+    dst_pts = np.float32([[0, 0], [w-1, 0], [0, h-1], [w-1, h-1]])  # Identity transformation
+    homography_matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+
+    warped_image = cv2.warpPerspective(image, homography_matrix, (w, h))
 
     plt.subplot(1, 3, i+1)
     plt.imshow(cv2.cvtColor(warped_image, cv2.COLOR_BGR2RGB))
